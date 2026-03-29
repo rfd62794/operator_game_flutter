@@ -8,89 +8,129 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'simple.freezed.dart';
 
-            // These functions are ignored because they are not marked as `pub`: `get_state`, `persist_state`
+// These functions are ignored because they are not marked as `pub`: `get_state`, `persist_state`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
+List<SlimeView> getRoster() => RustLib.instance.api.crateApiSimpleGetRoster();
 
-            List<SlimeView>  getRoster() => RustLib.instance.api.crateApiSimpleGetRoster();
+GameStateView getGameState() =>
+    RustLib.instance.api.crateApiSimpleGetGameState();
 
-GameStateView  getGameState() => RustLib.instance.api.crateApiSimpleGetGameState();
+Future<void> applyUiCommand({required UiCommand cmd}) =>
+    RustLib.instance.api.crateApiSimpleApplyUiCommand(cmd: cmd);
 
-Future<void>  applyUiCommand({required UiCommand cmd }) => RustLib.instance.api.crateApiSimpleApplyUiCommand(cmd: cmd);
+class GameStateView {
+  final PlatformInt64 bank;
+  final int scrap;
+  final double stressLevel;
 
-            class GameStateView  {
-                final PlatformInt64 bank;
-final int scrap;
-final double stressLevel;
+  const GameStateView({
+    required this.bank,
+    required this.scrap,
+    required this.stressLevel,
+  });
 
-                const GameStateView({required this.bank ,required this.scrap ,required this.stressLevel ,});
+  @override
+  int get hashCode => bank.hashCode ^ scrap.hashCode ^ stressLevel.hashCode;
 
-                
-                
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GameStateView &&
+          runtimeType == other.runtimeType &&
+          bank == other.bank &&
+          scrap == other.scrap &&
+          stressLevel == other.stressLevel;
+}
 
-                
-        @override
-        int get hashCode => bank.hashCode^scrap.hashCode^stressLevel.hashCode;
-        
+class SlimeView {
+  final String id;
+  final String name;
+  final String culture;
+  final int level;
+  final int curXp;
+  final int maxXp;
+  final int str;
+  final int agi;
+  final int intel;
+  final double hp;
+  final String lifeStage;
+  final bool isStaged;
+  final String? stateLabel;
+  final String? hatName;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is GameStateView &&
-                runtimeType == other.runtimeType
-                && bank == other.bank&& scrap == other.scrap&& stressLevel == other.stressLevel;
-        
-            }
+  const SlimeView({
+    required this.id,
+    required this.name,
+    required this.culture,
+    required this.level,
+    required this.curXp,
+    required this.maxXp,
+    required this.str,
+    required this.agi,
+    required this.intel,
+    required this.hp,
+    required this.lifeStage,
+    required this.isStaged,
+    this.stateLabel,
+    this.hatName,
+  });
 
-class SlimeView  {
-                final String id;
-final String name;
-final String culture;
-final int level;
-final int curXp;
-final int maxXp;
-final int str;
-final int agi;
-final int intel;
-final double hp;
-final String lifeStage;
-final bool isStaged;
-final String? stateLabel;
-final String? hatName;
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      culture.hashCode ^
+      level.hashCode ^
+      curXp.hashCode ^
+      maxXp.hashCode ^
+      str.hashCode ^
+      agi.hashCode ^
+      intel.hashCode ^
+      hp.hashCode ^
+      lifeStage.hashCode ^
+      isStaged.hashCode ^
+      stateLabel.hashCode ^
+      hatName.hashCode;
 
-                const SlimeView({required this.id ,required this.name ,required this.culture ,required this.level ,required this.curXp ,required this.maxXp ,required this.str ,required this.agi ,required this.intel ,required this.hp ,required this.lifeStage ,required this.isStaged ,this.stateLabel ,this.hatName ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => id.hashCode^name.hashCode^culture.hashCode^level.hashCode^curXp.hashCode^maxXp.hashCode^str.hashCode^agi.hashCode^intel.hashCode^hp.hashCode^lifeStage.hashCode^isStaged.hashCode^stateLabel.hashCode^hatName.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is SlimeView &&
-                runtimeType == other.runtimeType
-                && id == other.id&& name == other.name&& culture == other.culture&& level == other.level&& curXp == other.curXp&& maxXp == other.maxXp&& str == other.str&& agi == other.agi&& intel == other.intel&& hp == other.hp&& lifeStage == other.lifeStage&& isStaged == other.isStaged&& stateLabel == other.stateLabel&& hatName == other.hatName;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SlimeView &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          culture == other.culture &&
+          level == other.level &&
+          curXp == other.curXp &&
+          maxXp == other.maxXp &&
+          str == other.str &&
+          agi == other.agi &&
+          intel == other.intel &&
+          hp == other.hp &&
+          lifeStage == other.lifeStage &&
+          isStaged == other.isStaged &&
+          stateLabel == other.stateLabel &&
+          hatName == other.hatName;
+}
 
 @freezed
-                sealed class UiCommand with _$UiCommand  {
-                    const UiCommand._();
+sealed class UiCommand with _$UiCommand {
+  const UiCommand._();
 
-                     const factory UiCommand.toggleStage({   required String id , }) = UiCommand_ToggleStage;
- const factory UiCommand.equipHat({   required String slimeId ,  required String hatId , }) = UiCommand_EquipHat;
- const factory UiCommand.launchMission({   required String missionId ,  required List<String> operatorIds , }) = UiCommand_LaunchMission;
- const factory UiCommand.renameSlime({   required String id ,  required String newName , }) = UiCommand_RenameSlime;
- const factory UiCommand.syncState() = UiCommand_SyncState;
-
-                    
-
-                    
-                }
-            
+  const factory UiCommand.toggleStage({required String id}) =
+      UiCommand_ToggleStage;
+  const factory UiCommand.equipHat({
+    required String slimeId,
+    required String hatId,
+  }) = UiCommand_EquipHat;
+  const factory UiCommand.launchMission({
+    required String missionId,
+    required List<String> operatorIds,
+  }) = UiCommand_LaunchMission;
+  const factory UiCommand.renameSlime({
+    required String id,
+    required String newName,
+  }) = UiCommand_RenameSlime;
+  const factory UiCommand.syncState() = UiCommand_SyncState;
+}
