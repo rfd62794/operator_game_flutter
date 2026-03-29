@@ -6,7 +6,62 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+
 String greet({required String name}) =>
     RustLib.instance.api.crateApiSimpleGreet(name: name);
 
 BigInt getRosterCount() => RustLib.instance.api.crateApiSimpleGetRosterCount();
+
+List<SlimeView> getRoster() => RustLib.instance.api.crateApiSimpleGetRoster();
+
+class SlimeView {
+  final String id;
+  final String name;
+  final String culture;
+  final int level;
+  final String stage;
+  final int hp;
+  final int maxHp;
+  final double xpProgress;
+  final bool staged;
+
+  const SlimeView({
+    required this.id,
+    required this.name,
+    required this.culture,
+    required this.level,
+    required this.stage,
+    required this.hp,
+    required this.maxHp,
+    required this.xpProgress,
+    required this.staged,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      culture.hashCode ^
+      level.hashCode ^
+      stage.hashCode ^
+      hp.hashCode ^
+      maxHp.hashCode ^
+      xpProgress.hashCode ^
+      staged.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SlimeView &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          culture == other.culture &&
+          level == other.level &&
+          stage == other.stage &&
+          hp == other.hp &&
+          maxHp == other.maxHp &&
+          xpProgress == other.xpProgress &&
+          staged == other.staged;
+}
