@@ -49,8 +49,8 @@ fn get_state() -> GameState {
 }
 
 fn persist_state(state: &GameState) {
-    let path = PathBuf::from("save.json");
-    let _ = crate::persistence::save(state, &path);
+    let path = std::path::Path::new("save.json");
+    let _ = operator::persistence::save(state, path);
 }
 
 // ---------------------------------------------------------------------------
