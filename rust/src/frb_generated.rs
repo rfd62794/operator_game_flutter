@@ -277,7 +277,7 @@ impl SseDecode for crate::api::simple::SlimeView {
         let mut var_maxXp = <u32>::sse_decode(deserializer);
         let mut var_str = <u32>::sse_decode(deserializer);
         let mut var_agi = <u32>::sse_decode(deserializer);
-        let mut var_int = <u32>::sse_decode(deserializer);
+        let mut var_intel = <u32>::sse_decode(deserializer);
         let mut var_hp = <f32>::sse_decode(deserializer);
         let mut var_lifeStage = <String>::sse_decode(deserializer);
         let mut var_isStaged = <bool>::sse_decode(deserializer);
@@ -292,7 +292,7 @@ impl SseDecode for crate::api::simple::SlimeView {
             max_xp: var_maxXp,
             str: var_str,
             agi: var_agi,
-            int: var_int,
+            intel: var_intel,
             hp: var_hp,
             life_stage: var_lifeStage,
             is_staged: var_isStaged,
@@ -436,7 +436,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::simple::SlimeView {
             self.max_xp.into_into_dart().into_dart(),
             self.str.into_into_dart().into_dart(),
             self.agi.into_into_dart().into_dart(),
-            self.int.into_into_dart().into_dart(),
+            self.intel.into_into_dart().into_dart(),
             self.hp.into_into_dart().into_dart(),
             self.life_stage.into_into_dart().into_dart(),
             self.is_staged.into_into_dart().into_dart(),
@@ -586,7 +586,7 @@ impl SseEncode for crate::api::simple::SlimeView {
         <u32>::sse_encode(self.max_xp, serializer);
         <u32>::sse_encode(self.str, serializer);
         <u32>::sse_encode(self.agi, serializer);
-        <u32>::sse_encode(self.int, serializer);
+        <u32>::sse_encode(self.intel, serializer);
         <f32>::sse_encode(self.hp, serializer);
         <String>::sse_encode(self.life_stage, serializer);
         <bool>::sse_encode(self.is_staged, serializer);

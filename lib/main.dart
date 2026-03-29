@@ -58,9 +58,20 @@ class WarRoomLayout extends ConsumerWidget {
             right: 0,
             child: _DiagnosticOverlay(),
           ),
+          const _AAROverlay(),
         ],
       ),
     );
+  }
+}
+
+class _AAROverlay extends ConsumerWidget {
+  const _AAROverlay();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Placeholder for Phase 5.6 AAR integration
+    return const SizedBox.shrink();
   }
 }
 
@@ -167,15 +178,50 @@ class _MainContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mainTab = ref.watch(activeMainTabProvider);
     final rosterSubTab = ref.watch(rosterSubTabProvider);
+    final opsSubTab = ref.watch(opsSubTabProvider);
+    final mapSubTab = ref.watch(mapSubTabProvider);
+    final logsSubTab = ref.watch(logsSubTabProvider);
 
-    if (mainTab == MainTab.roster && rosterSubTab == RosterSubTab.collection) {
-      return const RosterView();
+    switch (mainTab) {
+      case MainTab.roster:
+        switch (rosterSubTab) {
+          case RosterSubTab.collection: return const RosterView();
+          default: return _PlaceholderView(label: 'ROSTER / ${rosterSubTab.name.toUpperCase()}');
+        }
+      case MainTab.ops:
+        switch (opsSubTab) {
+          case OpsSubTab.quests: return const QuestBoardView();
+          case OpsSubTab.active: return const ActiveOpsView();
+        }
+      case MainTab.map:
+        switch (mapSubTab) {
+          case MapSubTab.zones: return const RadarView();
+          case MapSubTab.shop: return const ShopView();
+        }
+      case MainTab.logs:
+        switch (logsSubTab) {
+          case LogsSubTab.missions: return const CombatLogView();
+          default: return _PlaceholderView(label: 'LOGS / ${logsSubTab.name.toUpperCase()}');
+        }
     }
+  }
+}
 
+class _PlaceholderView extends StatelessWidget {
+  final String label;
+  const _PlaceholderView({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
-      child: Text(
-        '${mainTab.name.toUpperCase()} / ${rosterSubTab.name.toUpperCase()}',
-        style: const TextStyle(color: Colors.white24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.construction, color: Colors.white10, size: 48),
+          const SizedBox(height: 16),
+          Text(label, style: const TextStyle(color: Colors.white24, letterSpacing: 1.5)),
+          const Text('PHASE 5.5 INTEGRATION PENDING', style: TextStyle(color: Colors.white10, fontSize: 8)),
+        ],
       ),
     );
   }
@@ -296,6 +342,51 @@ class _EmptyRosterView extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class QuestBoardView extends StatelessWidget {
+  const QuestBoardView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _PlaceholderView(label: 'QUEST BOARD (SDD-038)');
+  }
+}
+
+class ActiveOpsView extends StatelessWidget {
+  const ActiveOpsView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _PlaceholderView(label: 'ACTIVE OPERATIONS (SDD-038)');
+  }
+}
+
+class RadarView extends StatelessWidget {
+  const RadarView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _PlaceholderView(label: 'RADAR ZONES');
+  }
+}
+
+class ShopView extends StatelessWidget {
+  const ShopView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _PlaceholderView(label: 'QUARTERMASTER');
+  }
+}
+
+class CombatLogView extends StatelessWidget {
+  const CombatLogView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _PlaceholderView(label: 'MISSION HISTORY');
   }
 }
 

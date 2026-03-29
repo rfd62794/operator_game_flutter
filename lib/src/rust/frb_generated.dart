@@ -276,7 +276,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       maxXp: dco_decode_u_32(arr[5]),
       str: dco_decode_u_32(arr[6]),
       agi: dco_decode_u_32(arr[7]),
-      int: dco_decode_u_32(arr[8]),
+      intel: dco_decode_u_32(arr[8]),
       hp: dco_decode_f_32(arr[9]),
       lifeStage: dco_decode_String(arr[10]),
       isStaged: dco_decode_bool(arr[11]),
@@ -428,7 +428,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_maxXp = sse_decode_u_32(deserializer);
     var var_str = sse_decode_u_32(deserializer);
     var var_agi = sse_decode_u_32(deserializer);
-    var var_int = sse_decode_u_32(deserializer);
+    var var_intel = sse_decode_u_32(deserializer);
     var var_hp = sse_decode_f_32(deserializer);
     var var_lifeStage = sse_decode_String(deserializer);
     var var_isStaged = sse_decode_bool(deserializer);
@@ -443,7 +443,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       maxXp: var_maxXp,
       str: var_str,
       agi: var_agi,
-      int: var_int,
+      intel: var_intel,
       hp: var_hp,
       lifeStage: var_lifeStage,
       isStaged: var_isStaged,
@@ -602,7 +602,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.maxXp, serializer);
     sse_encode_u_32(self.str, serializer);
     sse_encode_u_32(self.agi, serializer);
-    sse_encode_u_32(self.int, serializer);
+    sse_encode_u_32(self.intel, serializer);
     sse_encode_f_32(self.hp, serializer);
     sse_encode_String(self.lifeStage, serializer);
     sse_encode_bool(self.isStaged, serializer);

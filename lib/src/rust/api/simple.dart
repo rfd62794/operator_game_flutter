@@ -52,7 +52,7 @@ class SlimeView {
   final int maxXp;
   final int str;
   final int agi;
-  final int int;
+  final int intel;
   final double hp;
   final String lifeStage;
   final bool isStaged;
@@ -68,7 +68,7 @@ class SlimeView {
     required this.maxXp,
     required this.str,
     required this.agi,
-    required this.int,
+    required this.intel,
     required this.hp,
     required this.lifeStage,
     required this.isStaged,
@@ -86,7 +86,7 @@ class SlimeView {
       maxXp.hashCode ^
       str.hashCode ^
       agi.hashCode ^
-      int.hashCode ^
+      intel.hashCode ^
       hp.hashCode ^
       lifeStage.hashCode ^
       isStaged.hashCode ^
@@ -106,7 +106,7 @@ class SlimeView {
           maxXp == other.maxXp &&
           str == other.str &&
           agi == other.agi &&
-          int == other.int &&
+          intel == other.intel &&
           hp == other.hp &&
           lifeStage == other.lifeStage &&
           isStaged == other.isStaged &&

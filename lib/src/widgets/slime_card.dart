@@ -78,7 +78,7 @@ class SlimeCard extends ConsumerWidget {
 
               // Row 4: Vitals
               Text(
-                'STR:${slime.str} AGI:${slime.agi} INT:${slime.int} HP:${slime.hp.toInt()}',
+                'STR:${slime.str} AGI:${slime.agi} INT:${slime.intel} HP:${slime.hp.toInt()}',
                 style: const TextStyle(color: Colors.white54, fontSize: 10, fontFamily: 'monospace'),
               ),
               const SizedBox(height: 8),
