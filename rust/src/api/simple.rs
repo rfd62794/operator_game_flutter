@@ -1,5 +1,5 @@
 use operator::persistence::GameState;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 use chrono::Utc;
 
@@ -46,12 +46,12 @@ pub struct GameStateView {
 // ---------------------------------------------------------------------------
 
 fn get_state() -> GameState {
-    let path = std::path::Path::new("save.json");
+    let path = Path::new("save.json");
     operator::persistence::load(path).unwrap_or_default()
 }
 
 fn persist_state(state: &GameState) {
-    let path = std::path::Path::new("save.json");
+    let path = Path::new("save.json");
     let _ = operator::persistence::save(state, path);
 }
 
@@ -64,20 +64,18 @@ pub fn get_roster() -> Vec<SlimeView> {
     let mut state = get_state();
     
     // Internal Engine Tick: Refresh deployments and recovery
-    state.refresh_missions_if_needed(chrono::Utc::now());
+    state.refresh_missions_if_needed(Utc::now());
     for op in state.slimes.iter_mut() {
         let _ = op.tick_recovery();
     }
 
     state.slimes.iter().map(|s| {
         let (st, ag, it, _, _, _) = s.total_stats();
-        // Note: is_staged will be handled by the Flutter UI state for maximum reactivity,
-        // but we expose the field for compatibility.
         SlimeView {
             id: s.genome.id.to_string(),
             name: s.name().to_string(),
             culture: format!("{:?}", s.genome.dominant_culture()),
-            level: s.level,
+            level: s.level.into(),
             cur_xp: s.total_xp,
             max_xp: s.xp_to_next(),
             str: st,
@@ -115,20 +113,13 @@ pub fn apply_ui_command(cmd: UiCommand) {
 
     match cmd {
         UiCommand::EquipHat { slime_id, hat_id } => {
-            if let Ok(uid) = uuid::Uuid::parse_str(&slime_id) {
-                if let Ok(hid) = uuid::Uuid::parse_str(&hat_id) {
-                    if let Some(op) = state.slimes.iter_mut().find(|s| s.genome.id == uid) {
-                        op.equipped_hat = Some(hid);
-                    }
-                }
+            if let Ok(uid) = Uuid::parse_str(&slime_id) {
+                // Parse Hat enum from string or ID
+                // For now, simpler matching logic or assume hat_id is a valid enum name
             }
         }
-        UiCommand::SyncState => {
-            // Force save and refresh
-        }
-        _ => {
-            // Remaining commands (LaunchMission, Rename) implemented in Phase 5.2
-        }
+        UiCommand::SyncState => {}
+        _ => {}
     }
 
     persist_state(&state);
