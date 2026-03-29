@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:operator_game_flutter/src/providers/roster_provider.dart';
 import 'package:operator_game_flutter/src/rust/frb_generated.dart';
+import 'package:operator_game_flutter/src/providers/diagnostic_provider.dart';
 import 'package:operator_game_flutter/src/theme/app_theme.dart';
 import 'package:operator_game_flutter/src/widgets/slime_card.dart';
 
@@ -114,6 +115,51 @@ class _RefreshButton extends ConsumerWidget {
       icon: isRefreshing 
           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
           : const Icon(Icons.refresh),
+    );
+  }
+}
+
+class _DiagnosticOverlay extends ConsumerWidget {
+  const _DiagnosticOverlay();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final latencyMicros = ref.watch(bridgeLatencyProvider);
+    final latencyMs = latencyMicros / 1000.0;
+    
+    // Performance color coding
+    final color = latencyMs < 2.0 ? Colors.greenAccent : (latencyMs < 5.0 ? Colors.orangeAccent : Colors.redAccent);
+
+    return Container(
+      color: Colors.black.withOpacity(0.8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.speed, size: 14, color: Colors.white38),
+          const SizedBox(width: 8),
+          Text(
+            'BRIDGE LATENCY: ',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white38, letterSpacing: 1.0),
+          ),
+          Text(
+            '${latencyMs.toStringAsFixed(2)}ms',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'monospace',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            latencyMs < 8.33 ? '120FPS TARGET: PASS' : '120FPS TARGET: FAIL',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: latencyMs < 8.33 ? Colors.white24 : Colors.redAccent,
+              fontSize: 9,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
