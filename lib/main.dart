@@ -4,6 +4,8 @@ import 'package:operator_game_flutter/src/providers/diagnostic_provider.dart';
 import 'package:operator_game_flutter/src/providers/game_state_provider.dart';
 import 'package:operator_game_flutter/src/providers/nav_provider.dart';
 import 'package:operator_game_flutter/src/providers/roster_provider.dart';
+import 'package:operator_game_flutter/src/rust/api/simple.dart';
+import 'package:operator_game_flutter/src/rust/frb_generated.dart';
 import 'package:operator_game_flutter/src/theme/app_theme.dart';
 import 'package:operator_game_flutter/src/widgets/slime_card.dart';
 
@@ -267,7 +269,12 @@ class _BottomNavBar extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _TabItem(icon: Icons.dna, label: 'Roster', active: activeTab == MainTab.roster, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.roster),
+          _BottomTabItem(
+            icon: Icons.fingerprint, 
+            label: 'ROSTER', 
+            isActive: activeTab == MainTab.roster,
+            onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.roster,
+          ),
           _TabItem(icon: Icons.rocket_launch, label: 'Ops', active: activeTab == MainTab.ops, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.ops),
           _TabItem(icon: Icons.public, label: 'Map', active: activeTab == MainTab.map, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.map),
           _TabItem(icon: Icons.history_edu, label: 'Logs', active: activeTab == MainTab.logs, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.logs),

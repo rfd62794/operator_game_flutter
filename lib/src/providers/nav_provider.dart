@@ -1,21 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:operator_game_flutter/src/rust/api/simple.dart';
 
 enum MainTab { roster, ops, map, logs }
 
-enum RosterSubTab { collection, breeding, recruit, squad }
-
-enum OpsSubTab { active, quests }
-
-enum MapSubTab { zones, shop }
-
-enum LogsSubTab { missions, culture }
-
 final activeMainTabProvider = StateProvider<MainTab>((ref) => MainTab.roster);
 
-final rosterSubTabProvider = StateProvider<RosterSubTab>((ref) => RosterSubTab.collection);
-
-final opsSubTabProvider = StateProvider<OpsSubTab>((ref) => OpsSubTab.active);
-
-final mapSubTabProvider = StateProvider<MapSubTab>((ref) => MapSubTab.zones);
-
-final logsSubTabProvider = StateProvider<LogsSubTab>((ref) => LogsSubTab.missions);
+final rosterProvider = StreamProvider<List<SlimeView>>((ref) async* {
+  while (true) {
+    yield getRoster();
+    await Future.delayed(const Duration(seconds: 1));
+  }
+});

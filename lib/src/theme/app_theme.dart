@@ -38,6 +38,9 @@ class AppTheme {
       textTheme: const TextTheme(
         labelSmall: TextStyle(letterSpacing: 1.0, fontSize: 10),
       ),
+    );
+  }
+
   static Color getLifeStageColor(String stage) {
     switch (stage.toUpperCase()) {
       case 'HATCHLING': return const Color(0xFFA0A0A0);
@@ -68,17 +71,4 @@ class SlimeColors {
   static Color getCultureColor(String culture) {
     return cultureColors[culture] ?? Colors.grey.shade800;
   }
-}
-
-class GlassDecoration extends BoxDecoration {
-  GlassDecoration({
-    Color color = Colors.white,
-    double opacity = 0.1,
-    double blur = 10.0,
-    double borderRadius = 16.0,
-  }) : super(
-          color: color.withOpacity(opacity),
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(color: color.withOpacity(0.2)),
-        );
 }
