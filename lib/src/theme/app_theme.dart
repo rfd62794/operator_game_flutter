@@ -38,7 +38,16 @@ class AppTheme {
       textTheme: const TextTheme(
         labelSmall: TextStyle(letterSpacing: 1.0, fontSize: 10),
       ),
-    );
+  static Color getLifeStageColor(String stage) {
+    switch (stage.toUpperCase()) {
+      case 'HATCHLING': return const Color(0xFFA0A0A0);
+      case 'JUVENILE':  return const Color(0xFF8CC88C);
+      case 'YOUNG':     return const Color(0xFF64C8B4);
+      case 'PRIME':     return const Color(0xFFDCB450);
+      case 'VETERAN':   return const Color(0xFFC88C3C);
+      case 'ELDER':     return const Color(0xFFB478DC);
+      default:          return Colors.white24;
+    }
   }
 }
 
