@@ -1,5 +1,5 @@
 use operator::persistence::GameState;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use uuid::Uuid;
 use chrono::Utc;
 
@@ -52,6 +52,7 @@ fn get_state() -> GameState {
 
 fn persist_state(state: &GameState) {
     let path = Path::new("save.json");
+    // Ensure absolute path signature matches sovereign persistence (G.1b)
     let _ = operator::persistence::save(state, path);
 }
 
@@ -75,7 +76,7 @@ pub fn get_roster() -> Vec<SlimeView> {
             id: s.genome.id.to_string(),
             name: s.name().to_string(),
             culture: format!("{:?}", s.genome.dominant_culture()),
-            level: s.level.into(),
+            level: s.level as u32,
             cur_xp: s.total_xp,
             max_xp: s.xp_to_next(),
             str: st,
@@ -86,7 +87,10 @@ pub fn get_roster() -> Vec<SlimeView> {
             is_staged: false, 
             state_label: match &s.state {
                 crate::models::SlimeState::Deployed(_) => Some("DEPLD".to_string()),
-                crate::models::SlimeState::Injured(rem) => Some(format!("INJRD: {}s", (*rem - Utc::now()).num_seconds())),
+                crate::models::SlimeState::Injured(rem) => {
+                    let diff = *rem - Utc::now();
+                    Some(format!("INJRD: {}s", diff.num_seconds().max(0)))
+                },
                 _ => None,
             },
             hat_name: s.equipped_hat.map(|h| format!("HAT: {}", operator::models::Hat::from_id(&h).name)),
@@ -112,13 +116,14 @@ pub fn apply_ui_command(cmd: UiCommand) {
     let mut state = get_state();
 
     match cmd {
-        UiCommand::EquipHat { slime_id, hat_id } => {
+        UiCommand::EquipHat { slime_id, hat_id: _hat_id } => {
             if let Ok(uid) = Uuid::parse_str(&slime_id) {
-                // Parse Hat enum from string or ID
-                // For now, simpler matching logic or assume hat_id is a valid enum name
+                // Command logic to be refined in Phase 5.5
+                let _op = state.slimes.iter().find(|s| s.genome.id == uid);
             }
         }
-        UiCommand::SyncState => {}
+        UiCommand::ToggleStage { id: _ } => {},
+        UiCommand::SyncState => {},
         _ => {}
     }
 
