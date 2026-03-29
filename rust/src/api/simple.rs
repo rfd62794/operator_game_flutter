@@ -1,4 +1,5 @@
 use operator::persistence::GameState;
+use operator::models::SlimeState;
 use std::path::Path;
 use uuid::Uuid;
 use chrono::Utc;
@@ -52,7 +53,6 @@ fn get_state() -> GameState {
 
 fn persist_state(state: &GameState) {
     let path = Path::new("save.json");
-    // Ensure absolute path signature matches sovereign persistence (G.1b)
     let _ = operator::persistence::save(state, path);
 }
 
@@ -86,8 +86,8 @@ pub fn get_roster() -> Vec<SlimeView> {
             life_stage: s.life_stage().to_string().to_uppercase(),
             is_staged: false, 
             state_label: match &s.state {
-                crate::models::SlimeState::Deployed(_) => Some("DEPLD".to_string()),
-                crate::models::SlimeState::Injured(rem) => {
+                SlimeState::Deployed(_) => Some("DEPLD".to_string()),
+                SlimeState::Injured(rem) => {
                     let diff = *rem - Utc::now();
                     Some(format!("INJRD: {}s", diff.num_seconds().max(0)))
                 },
@@ -103,7 +103,7 @@ pub fn get_game_state() -> GameStateView {
     let state = get_state();
     GameStateView {
         bank: state.bank,
-        scrap: state.inventory.scrap,
+        scrap: state.inventory.scrap as u32,
         stress_level: state.world_map.startled_level,
     }
 }
@@ -118,7 +118,6 @@ pub fn apply_ui_command(cmd: UiCommand) {
     match cmd {
         UiCommand::EquipHat { slime_id, hat_id: _hat_id } => {
             if let Ok(uid) = Uuid::parse_str(&slime_id) {
-                // Command logic to be refined in Phase 5.5
                 let _op = state.slimes.iter().find(|s| s.genome.id == uid);
             }
         }
