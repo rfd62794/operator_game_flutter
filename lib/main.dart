@@ -172,10 +172,11 @@ class _EmptyRosterView extends StatelessWidget {
     return const Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.white24),
-          SizedBox(height: 16),
-          Text('No slimes in roster. Time to breed!', style: TextStyle(color: Colors.white38)),
+          const Icon(Icons.inventory_2_outlined, size: 64, color: Colors.white24),
+          const SizedBox(height: 16),
+          const Text('No slimes in roster. Time to breed!', style: TextStyle(color: Colors.white38)),
         ],
       ),
     );
@@ -189,17 +190,31 @@ class _ErrorView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
-          const SizedBox(height: 16),
-          Text('Sync Error: $error', style: const TextStyle(color: Colors.redAccent)),
-          TextButton(
-            onPressed: () => ref.read(rosterProvider.notifier).refresh(),
-            child: const Text('RETRY'),
-          ),
-        ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Sync Error: $error',
+              style: const TextStyle(color: Colors.redAccent),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => ref.read(rosterProvider.notifier).refresh(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('RETRY SYNC'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent.withOpacity(0.2),
+                foregroundColor: Colors.redAccent,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
