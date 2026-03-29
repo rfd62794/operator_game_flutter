@@ -29,6 +29,23 @@ pub fn get_roster_count() -> usize {
 pub fn get_roster() -> Vec<SlimeView> {
     let path = std::path::Path::new("save.json");
     let state = operator::persistence::load(path).unwrap_or_default();
+    
+    // Diagnostic Force-Feed: If save.json is not found or empty, return a PoC slime
+    // to verify the Flutter UI and Bridge are alive.
+    if state.slimes.is_empty() {
+        return vec![SlimeView {
+            id: "DIAGNOSTIC-001".to_string(),
+            name: "EMBER SPARK (PoC)".to_string(),
+            culture: "Ember".to_string(),
+            level: 3,
+            stage: "Hatchling".to_string(),
+            hp: 85,
+            max_hp: 100,
+            xp_progress: 0.45,
+            staged: true,
+        }];
+    }
+
     state.slimes.iter().map(|op| {
         SlimeView {
             id: op.id().to_string(),
@@ -39,7 +56,7 @@ pub fn get_roster() -> Vec<SlimeView> {
             hp: op.genome.base_hp as u32,
             max_hp: op.genome.base_hp as u32,
             xp_progress: (op.total_xp % 100) as f32 / 100.0,
-            staged: false, // In Phase 4 we will wire this to real mission state
+            staged: false,
         }
     }).collect()
 }
