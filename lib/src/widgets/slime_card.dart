@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:operator_game_flutter/src/rust/api/simple.dart';
 import 'package:operator_game_flutter/src/theme/app_theme.dart';
+import 'package:operator_game_flutter/src/widgets/slime_detail_view.dart';
 
 class SlimeCard extends StatelessWidget {
   final SlimeView slime;
@@ -50,7 +52,10 @@ class SlimeCard extends StatelessWidget {
                   _CultureBadge(culture: slime.culture, color: cultureColor),
                   const SizedBox(width: 8),
                   IconButton(
-                    onPressed: () {}, // View Details Detail View
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      SlimeDetailView.show(context, slime);
+                    },
                     icon: const Icon(Icons.open_in_new, size: 20),
                     visualDensity: VisualDensity.compact,
                   ),
@@ -59,7 +64,13 @@ class SlimeCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Row 2: HP Bar (Premium)
-              _VitalityBar(percent: hpPercent, color: cultureColor),
+              Stack(
+                children: [
+                   _VitalityBar(percent: hpPercent, color: cultureColor),
+                   if (hpPercent < 0.2)
+                     const Positioned.fill(child: _HeartbeatOverlay()),
+                ],
+              ),
               const SizedBox(height: 12),
 
               // Row 3: Level + Life Stage Badge
@@ -110,7 +121,10 @@ class SlimeCard extends StatelessWidget {
                     ],
                   ),
                   TextButton.icon(
-                    onPressed: onStageToggle,
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      onStageToggle?.call();
+                    },
                     icon: Icon(slime.staged ? Icons.remove : Icons.add, size: 18),
                     label: Text(slime.staged ? 'WITHDRAW' : 'STAGE'),
                     style: TextButton.styleFrom(
@@ -213,6 +227,52 @@ class _VitalityBar extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _HeartbeatOverlay extends StatefulWidget {
+  const _HeartbeatOverlay();
+
+  @override
+  State<_HeartbeatOverlay> createState() => _HeartbeatOverlayState();
+}
+
+class _HeartbeatOverlayState extends State<_HeartbeatOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.0, end: 0.4).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.redAccent.withOpacity(_animation.value),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -25,19 +25,20 @@ class AppTheme {
 
 class SlimeColors {
   static const Map<String, Color> cultureColors = {
-    'Tide': Color(0xFF2196F3),     // Blue
-    'Spark': Color(0xFFFFEB3B),    // Yellow
-    'Flora': Color(0xFF4CAF50),    // Green
-    'Eber': Color(0xFFFF5722),     // Orange
-    'Gloom': Color(0xFF9C27B0),    // Purple
-    'Frost': Color(0xFF00BCD4),    // Cyan
-    'Stone': Color(0xFF795548),    // Brown
-    'Void': Color(0xFF212121),     // Black
-    'Light': Color(0xFFFAFAFA),    // White
+    'Ember':   Color(0xFFFF3D00), // Crimson/Red
+    'Tide':    Color(0xFF00B0FF), // Azure/Blue
+    'Orange':  Color(0xFFFF9100), // Amber/Orange
+    'Marsh':   Color(0xFFC6FF00), // Lime/Yellow-Green
+    'Teal':    Color(0xFF1DE9B6), // Cyan/Teal
+    'Crystal': Color(0xFF3D5AFE), // Indigo/Blue
+    'Gale':    Color(0xFF00E676), // Emerald/Green
+    'Tundra':  Color(0xFFD500F9), // Purple/Magenta
+    'Frost':   Color(0xFF00E5FF), // Ice/Cyan-White
+    'Void':    Color(0xFF212121), // Charcoal/Black
   };
 
   static Color getCultureColor(String culture) {
-    return cultureColors[culture] ?? Colors.grey;
+    return cultureColors[culture] ?? Colors.grey.shade800;
   }
 }
 
