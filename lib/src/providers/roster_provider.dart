@@ -22,8 +22,10 @@ class Roster extends _$Roster {
     try {
       final roster = getRoster();
       sw.stop();
-      // Update diagnostic provider with microseconds
-      ref.read(bridgeLatencyProvider.notifier).state = sw.elapsedMicroseconds;
+      // Defer state update to next microtask to avoid Riverpod build-phase exception
+      Future.microtask(() {
+        ref.read(bridgeLatencyProvider.notifier).state = sw.elapsedMicroseconds;
+      });
       return roster;
     } catch (e) {
       sw.stop();
