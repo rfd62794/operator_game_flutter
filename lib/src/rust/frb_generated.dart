@@ -7,443 +7,656 @@ import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
-import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'frb_generated.io.dart'
+    if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Main entrypoint of the Rust API
+class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
+  @internal
+  static final instance = RustLib._();
 
-                /// Main entrypoint of the Rust API
-                class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
-                  @internal
-                  static final instance = RustLib._();
+  RustLib._();
 
-                  RustLib._();
+  /// Initialize flutter_rust_bridge
+  static Future<void> init({
+    RustLibApi? api,
+    BaseHandler? handler,
+    ExternalLibrary? externalLibrary,
+    bool forceSameCodegenVersion = true,
+  }) async {
+    await instance.initImpl(
+      api: api,
+      handler: handler,
+      externalLibrary: externalLibrary,
+      forceSameCodegenVersion: forceSameCodegenVersion,
+    );
+  }
 
-                  /// Initialize flutter_rust_bridge
-                  static Future<void> init({
-                    RustLibApi? api,
-                    BaseHandler? handler,
-                    ExternalLibrary? externalLibrary,
-                    bool forceSameCodegenVersion = true,
-                  }) async {
-                    await instance.initImpl(
-                      api: api,
-                      handler: handler,
-                      externalLibrary: externalLibrary,
-                      forceSameCodegenVersion: forceSameCodegenVersion,
-                    );
-                  }
+  /// Initialize flutter_rust_bridge in mock mode.
+  /// No libraries for FFI are loaded.
+  static void initMock({required RustLibApi api}) {
+    instance.initMockImpl(api: api);
+  }
 
-                  /// Initialize flutter_rust_bridge in mock mode.
-                  /// No libraries for FFI are loaded.
-                  static void initMock({
-                    required RustLibApi api,
-                  }) {
-                    instance.initMockImpl(
-                      api: api,
-                    );
-                  }
+  /// Dispose flutter_rust_bridge
+  ///
+  /// The call to this function is optional, since flutter_rust_bridge (and everything else)
+  /// is automatically disposed when the app stops.
+  static void dispose() => instance.disposeImpl();
 
-                  /// Dispose flutter_rust_bridge
-                  ///
-                  /// The call to this function is optional, since flutter_rust_bridge (and everything else)
-                  /// is automatically disposed when the app stops.
-                  static void dispose() => instance.disposeImpl();
+  @override
+  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
+      RustLibApiImpl.new;
 
-                  @override
-                  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor => RustLibApiImpl.new;
+  @override
+  WireConstructor<RustLibWire> get wireConstructor =>
+      RustLibWire.fromExternalLibrary;
 
-                  @override
-                  WireConstructor<RustLibWire> get wireConstructor => RustLibWire.fromExternalLibrary;
+  @override
+  Future<void> executeRustInitializers() async {
+    await api.crateApiSimpleInitApp();
+  }
 
-                  @override
-                  Future<void> executeRustInitializers() async {
-                    await api.crateApiSimpleInitApp();
+  @override
+  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
+      kDefaultExternalLibraryLoaderConfig;
 
-                  }
+  @override
+  String get codegenVersion => '2.12.0';
 
-                  @override
-                  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig => kDefaultExternalLibraryLoaderConfig;
+  @override
+  int get rustContentHash => -2117416099;
 
-                  @override
-                  String get codegenVersion => '2.12.0';
+  static const kDefaultExternalLibraryLoaderConfig =
+      ExternalLibraryLoaderConfig(
+        stem: 'rust_lib_operator_game_flutter',
+        ioDirectory: 'rust/target/release/',
+        webPrefix: 'pkg/',
+        wasmBindgenName: 'wasm_bindgen',
+      );
+}
 
-                  @override
-                  int get rustContentHash => -2117416099;
+abstract class RustLibApi extends BaseApi {
+  Future<void> crateApiSimpleApplyUiCommand({required UiCommand cmd});
 
-                  static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
-                    stem: 'rust_lib_operator_game_flutter',
-                    ioDirectory: 'rust/target/release/',
-                    webPrefix: 'pkg/',
-                    wasmBindgenName: 'wasm_bindgen',
-                  );
-                }
-                
+  GameStateView crateApiSimpleGetGameState();
 
-                abstract class RustLibApi extends BaseApi {
-                  Future<void> crateApiSimpleApplyUiCommand({required UiCommand cmd });
+  List<SlimeView> crateApiSimpleGetRoster();
 
-GameStateView crateApiSimpleGetGameState();
+  Future<void> crateApiSimpleInitApp();
+}
 
-List<SlimeView> crateApiSimpleGetRoster();
+class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
+  RustLibApiImpl({
+    required super.handler,
+    required super.wire,
+    required super.generalizedFrbRustBinding,
+    required super.portManager,
+  });
 
-Future<void> crateApiSimpleInitApp();
-
-
-                }
-                
-
-                class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
-                  RustLibApiImpl({
-                    required super.handler,
-                    required super.wire,
-                    required super.generalizedFrbRustBinding,
-                    required super.portManager,
-                  });
-
-                  @override Future<void> crateApiSimpleApplyUiCommand({required UiCommand cmd })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_box_autoadd_ui_command(cmd, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiSimpleApplyUiCommand({required UiCommand cmd}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_ui_command(cmd, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiSimpleApplyUiCommandConstMeta,
-            argValues: [cmd],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiSimpleApplyUiCommandConstMeta,
+        argValues: [cmd],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiSimpleApplyUiCommandConstMeta =>
+      const TaskConstMeta(debugName: "apply_ui_command", argNames: ["cmd"]);
 
-        TaskConstMeta get kCrateApiSimpleApplyUiCommandConstMeta => const TaskConstMeta(
-            debugName: "apply_ui_command",
-            argNames: ["cmd"],
-        );
-        
-
-@override GameStateView crateApiSimpleGetGameState()  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  GameStateView crateApiSimpleGetGameState() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_game_state_view,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiSimpleGetGameStateConstMeta,
-            argValues: [],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiSimpleGetGameStateConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiSimpleGetGameStateConstMeta =>
+      const TaskConstMeta(debugName: "get_game_state", argNames: []);
 
-        TaskConstMeta get kCrateApiSimpleGetGameStateConstMeta => const TaskConstMeta(
-            debugName: "get_game_state",
-            argNames: [],
-        );
-        
-
-@override List<SlimeView> crateApiSimpleGetRoster()  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  List<SlimeView> crateApiSimpleGetRoster() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_list_slime_view,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiSimpleGetRosterConstMeta,
-            argValues: [],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiSimpleGetRosterConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiSimpleGetRosterConstMeta =>
+      const TaskConstMeta(debugName: "get_roster", argNames: []);
 
-        TaskConstMeta get kCrateApiSimpleGetRosterConstMeta => const TaskConstMeta(
-            debugName: "get_roster",
-            argNames: [],
-        );
-        
-
-@override Future<void> crateApiSimpleInitApp()  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiSimpleInitApp() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiSimpleInitAppConstMeta,
-            argValues: [],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiSimpleInitAppConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiSimpleInitAppConstMeta =>
+      const TaskConstMeta(debugName: "init_app", argNames: []);
 
-        TaskConstMeta get kCrateApiSimpleInitAppConstMeta => const TaskConstMeta(
-            debugName: "init_app",
-            argNames: [],
+  @protected
+  String dco_decode_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as String;
+  }
+
+  @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  UiCommand dco_decode_box_autoadd_ui_command(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ui_command(raw);
+  }
+
+  @protected
+  double dco_decode_f_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  GameStateView dco_decode_game_state_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return GameStateView(
+      bank: dco_decode_i_64(arr[0]),
+      scrap: dco_decode_u_32(arr[1]),
+      stressLevel: dco_decode_f_32(arr[2]),
+    );
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Uint8List;
+  }
+
+  @protected
+  List<SlimeView> dco_decode_list_slime_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_slime_view).toList();
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  SlimeView dco_decode_slime_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 14)
+      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
+    return SlimeView(
+      id: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      culture: dco_decode_String(arr[2]),
+      level: dco_decode_u_32(arr[3]),
+      curXp: dco_decode_u_32(arr[4]),
+      maxXp: dco_decode_u_32(arr[5]),
+      str: dco_decode_u_32(arr[6]),
+      agi: dco_decode_u_32(arr[7]),
+      intel: dco_decode_u_32(arr[8]),
+      hp: dco_decode_f_32(arr[9]),
+      lifeStage: dco_decode_String(arr[10]),
+      isStaged: dco_decode_bool(arr[11]),
+      stateLabel: dco_decode_opt_String(arr[12]),
+      hatName: dco_decode_opt_String(arr[13]),
+    );
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  int dco_decode_u_8(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  UiCommand dco_decode_ui_command(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return UiCommand_ToggleStage(id: dco_decode_String(raw[1]));
+      case 1:
+        return UiCommand_EquipHat(
+          slimeId: dco_decode_String(raw[1]),
+          hatId: dco_decode_String(raw[2]),
         );
-        
+      case 2:
+        return UiCommand_LaunchMission(
+          missionId: dco_decode_String(raw[1]),
+          operatorIds: dco_decode_list_String(raw[2]),
+        );
+      case 3:
+        return UiCommand_RenameSlime(
+          id: dco_decode_String(raw[1]),
+          newName: dco_decode_String(raw[2]),
+        );
+      case 4:
+        return UiCommand_SyncState();
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
+  @protected
+  void dco_decode_unit(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return;
+  }
 
+  @protected
+  String sse_decode_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
+    return utf8.decoder.convert(inner);
+  }
 
-                  @protected String dco_decode_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as String; }
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
 
-@protected bool dco_decode_bool(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as bool; }
+  @protected
+  UiCommand sse_decode_box_autoadd_ui_command(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ui_command(deserializer));
+  }
 
-@protected UiCommand dco_decode_box_autoadd_ui_command(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ui_command(raw); }
+  @protected
+  double sse_decode_f_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat32();
+  }
 
-@protected double dco_decode_f_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as double; }
+  @protected
+  GameStateView sse_decode_game_state_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_bank = sse_decode_i_64(deserializer);
+    var var_scrap = sse_decode_u_32(deserializer);
+    var var_stressLevel = sse_decode_f_32(deserializer);
+    return GameStateView(
+      bank: var_bank,
+      scrap: var_scrap,
+      stressLevel: var_stressLevel,
+    );
+  }
 
-@protected GameStateView dco_decode_game_state_view(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return GameStateView(bank: dco_decode_i_64(arr[0]),
-scrap: dco_decode_u_32(arr[1]),
-stressLevel: dco_decode_f_32(arr[2]),); }
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
 
-@protected PlatformInt64 dco_decode_i_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dcoDecodeI64(raw); }
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
 
-@protected List<String> dco_decode_list_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_String).toList(); }
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
 
-@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as Uint8List; }
+  @protected
+  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
+  }
 
-@protected List<SlimeView> dco_decode_list_slime_view(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_slime_view).toList(); }
+  @protected
+  List<SlimeView> sse_decode_list_slime_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
 
-@protected String? dco_decode_opt_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_String(raw); }
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SlimeView>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_slime_view(deserializer));
+    }
+    return ans_;
+  }
 
-@protected SlimeView dco_decode_slime_view(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 14) throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
-                return SlimeView(id: dco_decode_String(arr[0]),
-name: dco_decode_String(arr[1]),
-culture: dco_decode_String(arr[2]),
-level: dco_decode_u_32(arr[3]),
-curXp: dco_decode_u_32(arr[4]),
-maxXp: dco_decode_u_32(arr[5]),
-str: dco_decode_u_32(arr[6]),
-agi: dco_decode_u_32(arr[7]),
-intel: dco_decode_u_32(arr[8]),
-hp: dco_decode_f_32(arr[9]),
-lifeStage: dco_decode_String(arr[10]),
-isStaged: dco_decode_bool(arr[11]),
-stateLabel: dco_decode_opt_String(arr[12]),
-hatName: dco_decode_opt_String(arr[13]),); }
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
 
-@protected int dco_decode_u_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
 
-@protected int dco_decode_u_8(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
+  @protected
+  SlimeView sse_decode_slime_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_culture = sse_decode_String(deserializer);
+    var var_level = sse_decode_u_32(deserializer);
+    var var_curXp = sse_decode_u_32(deserializer);
+    var var_maxXp = sse_decode_u_32(deserializer);
+    var var_str = sse_decode_u_32(deserializer);
+    var var_agi = sse_decode_u_32(deserializer);
+    var var_intel = sse_decode_u_32(deserializer);
+    var var_hp = sse_decode_f_32(deserializer);
+    var var_lifeStage = sse_decode_String(deserializer);
+    var var_isStaged = sse_decode_bool(deserializer);
+    var var_stateLabel = sse_decode_opt_String(deserializer);
+    var var_hatName = sse_decode_opt_String(deserializer);
+    return SlimeView(
+      id: var_id,
+      name: var_name,
+      culture: var_culture,
+      level: var_level,
+      curXp: var_curXp,
+      maxXp: var_maxXp,
+      str: var_str,
+      agi: var_agi,
+      intel: var_intel,
+      hp: var_hp,
+      lifeStage: var_lifeStage,
+      isStaged: var_isStaged,
+      stateLabel: var_stateLabel,
+      hatName: var_hatName,
+    );
+  }
 
-@protected UiCommand dco_decode_ui_command(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return UiCommand_ToggleStage(id: dco_decode_String(raw[1]),);
-case 1: return UiCommand_EquipHat(slimeId: dco_decode_String(raw[1]),hatId: dco_decode_String(raw[2]),);
-case 2: return UiCommand_LaunchMission(missionId: dco_decode_String(raw[1]),operatorIds: dco_decode_list_String(raw[2]),);
-case 3: return UiCommand_RenameSlime(id: dco_decode_String(raw[1]),newName: dco_decode_String(raw[2]),);
-case 4: return UiCommand_SyncState();
-                default: throw Exception("unreachable");
-            } }
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
+  }
 
-@protected void dco_decode_unit(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return; }
+  @protected
+  int sse_decode_u_8(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8();
+  }
 
-@protected String sse_decode_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_list_prim_u_8_strict(deserializer);
-        return utf8.decoder.convert(inner); }
+  @protected
+  UiCommand sse_decode_ui_command(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
 
-@protected bool sse_decode_bool(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint8() != 0; }
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_id = sse_decode_String(deserializer);
+        return UiCommand_ToggleStage(id: var_id);
+      case 1:
+        var var_slimeId = sse_decode_String(deserializer);
+        var var_hatId = sse_decode_String(deserializer);
+        return UiCommand_EquipHat(slimeId: var_slimeId, hatId: var_hatId);
+      case 2:
+        var var_missionId = sse_decode_String(deserializer);
+        var var_operatorIds = sse_decode_list_String(deserializer);
+        return UiCommand_LaunchMission(
+          missionId: var_missionId,
+          operatorIds: var_operatorIds,
+        );
+      case 3:
+        var var_id = sse_decode_String(deserializer);
+        var var_newName = sse_decode_String(deserializer);
+        return UiCommand_RenameSlime(id: var_id, newName: var_newName);
+      case 4:
+        return UiCommand_SyncState();
+      default:
+        throw UnimplementedError('');
+    }
+  }
 
-@protected UiCommand sse_decode_box_autoadd_ui_command(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ui_command(deserializer)); }
+  @protected
+  void sse_decode_unit(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
 
-@protected double sse_decode_f_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getFloat32(); }
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
 
-@protected GameStateView sse_decode_game_state_view(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_bank = sse_decode_i_64(deserializer);
-var var_scrap = sse_decode_u_32(deserializer);
-var var_stressLevel = sse_decode_f_32(deserializer);
-return GameStateView(bank: var_bank, scrap: var_scrap, stressLevel: var_stressLevel); }
+  @protected
+  void sse_encode_String(String self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
 
-@protected PlatformInt64 sse_decode_i_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getPlatformInt64(); }
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
 
-@protected List<String> sse_decode_list_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
+  @protected
+  void sse_encode_box_autoadd_ui_command(
+    UiCommand self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ui_command(self, serializer);
+  }
 
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <String>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_String(deserializer)); }
-        return ans_;
-         }
+  @protected
+  void sse_encode_f_32(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat32(self);
+  }
 
-@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var len_ = sse_decode_i_32(deserializer);
-                return deserializer.buffer.getUint8List(len_); }
+  @protected
+  void sse_encode_game_state_view(
+    GameStateView self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.bank, serializer);
+    sse_encode_u_32(self.scrap, serializer);
+    sse_encode_f_32(self.stressLevel, serializer);
+  }
 
-@protected List<SlimeView> sse_decode_list_slime_view(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
 
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <SlimeView>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_slime_view(deserializer)); }
-        return ans_;
-         }
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
 
-@protected String? sse_decode_opt_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
+  @protected
+  void sse_encode_list_prim_u_8_strict(
+    Uint8List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(self);
+  }
 
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_String(deserializer));
-            } else {
-                return null;
-            }
-             }
+  @protected
+  void sse_encode_list_slime_view(
+    List<SlimeView> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_slime_view(item, serializer);
+    }
+  }
 
-@protected SlimeView sse_decode_slime_view(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_id = sse_decode_String(deserializer);
-var var_name = sse_decode_String(deserializer);
-var var_culture = sse_decode_String(deserializer);
-var var_level = sse_decode_u_32(deserializer);
-var var_curXp = sse_decode_u_32(deserializer);
-var var_maxXp = sse_decode_u_32(deserializer);
-var var_str = sse_decode_u_32(deserializer);
-var var_agi = sse_decode_u_32(deserializer);
-var var_intel = sse_decode_u_32(deserializer);
-var var_hp = sse_decode_f_32(deserializer);
-var var_lifeStage = sse_decode_String(deserializer);
-var var_isStaged = sse_decode_bool(deserializer);
-var var_stateLabel = sse_decode_opt_String(deserializer);
-var var_hatName = sse_decode_opt_String(deserializer);
-return SlimeView(id: var_id, name: var_name, culture: var_culture, level: var_level, curXp: var_curXp, maxXp: var_maxXp, str: var_str, agi: var_agi, intel: var_intel, hp: var_hp, lifeStage: var_lifeStage, isStaged: var_isStaged, stateLabel: var_stateLabel, hatName: var_hatName); }
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
 
-@protected int sse_decode_u_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint32(); }
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
 
-@protected int sse_decode_u_8(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint8(); }
+  @protected
+  void sse_encode_slime_view(SlimeView self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.culture, serializer);
+    sse_encode_u_32(self.level, serializer);
+    sse_encode_u_32(self.curXp, serializer);
+    sse_encode_u_32(self.maxXp, serializer);
+    sse_encode_u_32(self.str, serializer);
+    sse_encode_u_32(self.agi, serializer);
+    sse_encode_u_32(self.intel, serializer);
+    sse_encode_f_32(self.hp, serializer);
+    sse_encode_String(self.lifeStage, serializer);
+    sse_encode_bool(self.isStaged, serializer);
+    sse_encode_opt_String(self.stateLabel, serializer);
+    sse_encode_opt_String(self.hatName, serializer);
+  }
 
-@protected UiCommand sse_decode_ui_command(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
+  }
 
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_id = sse_decode_String(deserializer);
-return UiCommand_ToggleStage(id: var_id);case 1: var var_slimeId = sse_decode_String(deserializer);
-var var_hatId = sse_decode_String(deserializer);
-return UiCommand_EquipHat(slimeId: var_slimeId, hatId: var_hatId);case 2: var var_missionId = sse_decode_String(deserializer);
-var var_operatorIds = sse_decode_list_String(deserializer);
-return UiCommand_LaunchMission(missionId: var_missionId, operatorIds: var_operatorIds);case 3: var var_id = sse_decode_String(deserializer);
-var var_newName = sse_decode_String(deserializer);
-return UiCommand_RenameSlime(id: var_id, newName: var_newName);case 4: return UiCommand_SyncState(); default: throw UnimplementedError(''); }
-             }
+  @protected
+  void sse_encode_u_8(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self);
+  }
 
-@protected void sse_decode_unit(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
- }
+  @protected
+  void sse_encode_ui_command(UiCommand self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case UiCommand_ToggleStage(id: final id):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(id, serializer);
+      case UiCommand_EquipHat(slimeId: final slimeId, hatId: final hatId):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(slimeId, serializer);
+        sse_encode_String(hatId, serializer);
+      case UiCommand_LaunchMission(
+        missionId: final missionId,
+        operatorIds: final operatorIds,
+      ):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(missionId, serializer);
+        sse_encode_list_String(operatorIds, serializer);
+      case UiCommand_RenameSlime(id: final id, newName: final newName):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(id, serializer);
+        sse_encode_String(newName, serializer);
+      case UiCommand_SyncState():
+        sse_encode_i_32(4, serializer);
+    }
+  }
 
-@protected int sse_decode_i_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getInt32(); }
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
 
-@protected void sse_encode_String(String self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer); }
-
-@protected void sse_encode_bool(bool self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint8(self ? 1 : 0); }
-
-@protected void sse_encode_box_autoadd_ui_command(UiCommand self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ui_command(self, serializer); }
-
-@protected void sse_encode_f_32(double self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putFloat32(self); }
-
-@protected void sse_encode_game_state_view(GameStateView self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_64(self.bank, serializer);
-sse_encode_u_32(self.scrap, serializer);
-sse_encode_f_32(self.stressLevel, serializer);
- }
-
-@protected void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putPlatformInt64(self); }
-
-@protected void sse_encode_list_String(List<String> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_String(item, serializer); } }
-
-@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-                    serializer.buffer.putUint8List(self); }
-
-@protected void sse_encode_list_slime_view(List<SlimeView> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_slime_view(item, serializer); } }
-
-@protected void sse_encode_opt_String(String? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_String(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_slime_view(SlimeView self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.id, serializer);
-sse_encode_String(self.name, serializer);
-sse_encode_String(self.culture, serializer);
-sse_encode_u_32(self.level, serializer);
-sse_encode_u_32(self.curXp, serializer);
-sse_encode_u_32(self.maxXp, serializer);
-sse_encode_u_32(self.str, serializer);
-sse_encode_u_32(self.agi, serializer);
-sse_encode_u_32(self.intel, serializer);
-sse_encode_f_32(self.hp, serializer);
-sse_encode_String(self.lifeStage, serializer);
-sse_encode_bool(self.isStaged, serializer);
-sse_encode_opt_String(self.stateLabel, serializer);
-sse_encode_opt_String(self.hatName, serializer);
- }
-
-@protected void sse_encode_u_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint32(self); }
-
-@protected void sse_encode_u_8(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint8(self); }
-
-@protected void sse_encode_ui_command(UiCommand self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case UiCommand_ToggleStage(id: final id): sse_encode_i_32(0, serializer); sse_encode_String(id, serializer);
-case UiCommand_EquipHat(slimeId: final slimeId,hatId: final hatId): sse_encode_i_32(1, serializer); sse_encode_String(slimeId, serializer);
-sse_encode_String(hatId, serializer);
-case UiCommand_LaunchMission(missionId: final missionId,operatorIds: final operatorIds): sse_encode_i_32(2, serializer); sse_encode_String(missionId, serializer);
-sse_encode_list_String(operatorIds, serializer);
-case UiCommand_RenameSlime(id: final id,newName: final newName): sse_encode_i_32(3, serializer); sse_encode_String(id, serializer);
-sse_encode_String(newName, serializer);
-case UiCommand_SyncState(): sse_encode_i_32(4, serializer);   } }
-
-@protected void sse_encode_unit(void self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
- }
-
-@protected void sse_encode_i_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putInt32(self); }
-                }
-                
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+}

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:operator_game_flutter/src/rust/api/simple.dart'; // Correct generated path
+import 'package:operator_game_flutter/src/rust/api/simple.dart';
 import 'package:operator_game_flutter/src/theme/app_theme.dart';
 
 class SlimeCard extends ConsumerWidget {
@@ -13,14 +13,14 @@ class SlimeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Ground-truth culture colors from the design system
     final cultureColor = SlimeColors.getCultureColor(slime.culture);
-    final stageColor = AppTheme.getLifeStageColor(slime.life_stage);
+    final stageColor = AppTheme.getLifeStageColor(slime.lifeStage);
     
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surfaceHigh,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: slime.is_staged ? Colors.greenAccent.withOpacity(0.5) : Colors.white10,
+          color: slime.isStaged ? Colors.greenAccent.withOpacity(0.5) : Colors.white10,
           width: 1,
         ),
       ),
@@ -41,11 +41,11 @@ class SlimeCard extends ConsumerWidget {
                 style: TextStyle(color: cultureColor.withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              if (slime.state_label != null)
-                _StatusBadge(label: slime.state_label!)
+              if (slime.stateLabel != null)
+                _StatusBadge(label: slime.stateLabel!)
               else
                 _StageButton(
-                  isStaged: slime.is_staged,
+                  isStaged: slime.isStaged,
                   onPressed: () {
                     HapticFeedback.lightImpact();
                   },
@@ -60,7 +60,7 @@ class SlimeCard extends ConsumerWidget {
               Text('LVL: ${slime.level}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
               const SizedBox(width: 8),
               Text(
-                slime.life_stage,
+                slime.lifeStage,
                 style: TextStyle(color: stageColor, fontSize: 11, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 8),
@@ -70,7 +70,7 @@ class SlimeCard extends ConsumerWidget {
           const SizedBox(height: 6),
 
           // ROW 3: XP ProgressBar
-          _XPProgressBar(current: slime.cur_xp, max: slime.max_xp),
+          _XPProgressBar(current: slime.curXp, max: slime.maxXp),
           const SizedBox(height: 6),
 
           // ROW 4: Stats and HP
@@ -98,7 +98,7 @@ class SlimeCard extends ConsumerWidget {
                 padding: EdgeInsets.zero,
               ),
               child: Text(
-                slime.hat_name ?? '+ EQUIP HAT',
+                slime.hatName ?? '+ EQUIP HAT',
                 style: const TextStyle(fontSize: 10, color: Colors.white38),
               ),
             ),

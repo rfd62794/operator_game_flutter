@@ -92,7 +92,7 @@ class _TopStatusBar extends ConsumerWidget {
         children: [
           _TelemetryItem(label: 'BANK', value: '\$${gameState.value?.bank ?? 0}', color: Colors.greenAccent),
           _TelemetryItem(label: 'SCRAP', value: '${gameState.value?.scrap ?? 0}kg', color: Colors.orangeAccent),
-          _TelemetryItem(label: 'STRESS', value: '${(gameState.value?.stress_level ?? 0 * 100).toInt()}%', color: Colors.redAccent),
+          _TelemetryItem(label: 'STRESS', value: '${((gameState.value?.stressLevel ?? 0) * 100).toInt()}%', color: Colors.redAccent),
         ],
       ),
     );
