@@ -85,6 +85,12 @@ class RosterView extends ConsumerWidget {
               right: 0,
               child: LinearProgressIndicator(minHeight: 2),
             ),
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _DiagnosticOverlay(),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

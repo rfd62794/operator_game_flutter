@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:operator_game_flutter/src/rust/api/simple.dart';
+import 'package:operator_game_flutter/src/providers/diagnostic_provider.dart';
 
 part 'roster_provider.g.dart';
 
@@ -7,14 +9,25 @@ part 'roster_provider.g.dart';
 class Roster extends _$Roster {
   @override
   FutureOr<List<SlimeView>> build() async {
-    // Initial fetch from the Rust bridge
-    return getRoster();
+    return _fetchRosterWithTiming();
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async => getRoster());
+    state = await AsyncValue.guard(() async => _fetchRosterWithTiming());
   }
 
-  // Future expansion: Add methods to stage/unstage slimes via the bridge
+  Future<List<SlimeView>> _fetchRosterWithTiming() async {
+    final sw = Stopwatch()..start();
+    try {
+      final roster = getRoster();
+      sw.stop();
+      // Update diagnostic provider with microseconds
+      ref.read(bridgeLatencyProvider.notifier).state = sw.elapsedMicroseconds;
+      return roster;
+    } catch (e) {
+      sw.stop();
+      rethrow;
+    }
+  }
 }
