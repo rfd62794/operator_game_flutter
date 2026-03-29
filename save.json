@@ -1,0 +1,117 @@
+{
+  "bank": 1500,
+  "deployments": [],
+  "missions": [],
+  "slimes": [
+    {
+      "genome": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "culture_alleles": {
+          "dominant": { "0": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+          "recessive": { "0": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] }
+        },
+        "base_hp": 100.0,
+        "base_atk": 25.0,
+        "base_spd": 15.0,
+        "generation": 1,
+        "parent_ids": null,
+        "curiosity": 0.5,
+        "energy": 0.7,
+        "affection": 0.8,
+        "shyness": 0.2,
+        "base_strength": 10,
+        "base_agility": 10,
+        "base_intelligence": 10,
+        "base_mind": 10,
+        "base_sensory": 10,
+        "base_tenacity": 10,
+        "shape": "Round",
+        "body_size": "Medium",
+        "pattern": "Solid",
+        "accessory": "None",
+        "base_color": [255, 0, 0],
+        "pattern_color": [255, 255, 255],
+        "frequency": 256.0,
+        "name": "Ember Spark"
+      },
+      "level": 3,
+      "total_xp": 350,
+      "stat_xp": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "state": "Idle",
+      "training": {
+        "session_counts": {},
+        "last_reset": "2026-03-29T00:00:00Z"
+      },
+      "equipped_gear": [],
+      "equipped_hat": null,
+      "synthesis_cooldown_until": null
+    },
+    {
+      "genome": {
+        "id": "67123456-e29b-41d4-a716-446655440001",
+        "culture_alleles": {
+          "dominant": { "0": [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+          "recessive": { "0": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] }
+        },
+        "base_hp": 120.0,
+        "base_atk": 15.0,
+        "base_spd": 25.0,
+        "generation": 2,
+        "parent_ids": ["550e8400-e29b-41d4-a716-446655440000", "00000000-0000-0000-0000-000000000000"],
+        "curiosity": 0.8,
+        "energy": 0.3,
+        "affection": 0.5,
+        "shyness": 0.9,
+        "base_strength": 8,
+        "base_agility": 15,
+        "base_intelligence": 12,
+        "base_mind": 10,
+        "base_sensory": 18,
+        "base_tenacity": 5,
+        "shape": "Amorphous",
+        "body_size": "Small",
+        "pattern": "Striped",
+        "accessory": "Glow",
+        "base_color": [0, 0, 255],
+        "pattern_color": [0, 255, 255],
+        "frequency": 320.0,
+        "name": "Tide Rippler"
+      },
+      "level": 5,
+      "total_xp": 575,
+      "stat_xp": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "state": "Idle",
+      "training": {
+        "session_counts": {},
+        "last_reset": "2026-03-29T00:00:00Z"
+      },
+      "equipped_gear": [],
+      "equipped_hat": null,
+      "synthesis_cooldown_until": null
+    }
+  ],
+  "incubating": [],
+  "tech_tier": 1,
+  "lens_unlocked": true,
+  "world_map": {
+    "nodes": [],
+    "connections": []
+  },
+  "last_upkeep_at": "2026-03-29T00:00:00Z",
+  "last_pool_refresh": "2026-03-29T00:00:00Z",
+  "inventory": {
+    "scrap": 1000,
+    "biomass": 200,
+    "reagents": 50
+  },
+  "active_expeditions": [],
+  "active_tab": "Roster",
+  "roster_sub_tab": "Overview",
+  "missions_sub_tab": "Daily",
+  "map_sub_tab": "Region1",
+  "logs_sub_tab": "Combat",
+  "combat_log": [],
+  "version": 11,
+  "unlocked_nodes": [0],
+  "hat_inventory": []
+}
