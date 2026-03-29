@@ -6,7 +6,7 @@ part of 'roster_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$rosterHash() => r'900183b7729372db0283fa0a642f942990b388df';
+String _$rosterHash() => r'a7d8306025c90a3b4e1cec780167b552ebec69fc';
 
 /// See also [Roster].
 @ProviderFor(Roster)
