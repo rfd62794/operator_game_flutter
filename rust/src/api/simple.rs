@@ -1,5 +1,7 @@
 use operator::persistence::GameState;
 use std::path::PathBuf;
+use uuid::Uuid;
+use chrono::Utc;
 
 // ---------------------------------------------------------------------------
 // Bridge DTOs (Data Transfer Objects)
@@ -24,7 +26,7 @@ pub struct SlimeView {
     pub max_xp: u32,
     pub str: u32,
     pub agi: u32,
-    pub int: u32,
+    pub intel: u32,
     pub hp: f32,
     pub life_stage: String,
     pub is_staged: bool,
