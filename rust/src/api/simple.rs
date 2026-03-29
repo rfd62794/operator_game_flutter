@@ -1,68 +1,138 @@
 use operator::persistence::GameState;
+use std::path::PathBuf;
+
+// ---------------------------------------------------------------------------
+// Bridge DTOs (Data Transfer Objects)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub enum UiCommand {
+    ToggleStage { id: String },
+    EquipHat { slime_id: String, hat_id: String },
+    LaunchMission { mission_id: String, operator_ids: Vec<String> },
+    RenameSlime { id: String, new_name: String },
+    SyncState,
+}
 
 #[derive(Debug, Clone)]
 pub struct SlimeView {
     pub id: String,
     pub name: String,
     pub culture: String,
-    pub level: u8,
-    pub stage: String,
-    pub hp: u32,
-    pub max_hp: u32,
-    pub xp_progress: f32,
-    pub staged: bool,
+    pub level: u32,
+    pub cur_xp: u32,
+    pub max_xp: u32,
+    pub str: u32,
+    pub agi: u32,
+    pub int: u32,
+    pub hp: f32,
+    pub life_stage: String,
+    pub is_staged: bool,
+    pub state_label: Option<String>,
+    pub hat_name: Option<String>,
 }
 
-#[flutter_rust_bridge::frb(sync)] // Synchronous mode for simplicity of the demo
-pub fn greet(name: String) -> String {
-    format!("Hello, {name}! From the Flutter side.")
+#[derive(Debug, Clone)]
+pub struct GameStateView {
+    pub bank: i64,
+    pub scrap: u32,
+    pub stress_level: f32,
 }
 
-#[flutter_rust_bridge::frb(sync)]
-pub fn get_roster_count() -> usize {
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+fn get_state() -> GameState {
     let path = std::path::Path::new("save.json");
-    let state = operator::persistence::load(path).unwrap_or_default();
-    state.slimes.len()
+    operator::persistence::load(path).unwrap_or_default()
 }
+
+fn persist_state(state: &GameState) {
+    let path = PathBuf::from("save.json");
+    let _ = crate::persistence::save(state, &path);
+}
+
+// ---------------------------------------------------------------------------
+// Synchronous API
+// ---------------------------------------------------------------------------
 
 #[flutter_rust_bridge::frb(sync)]
 pub fn get_roster() -> Vec<SlimeView> {
-    let path = std::path::Path::new("save.json");
-    let state = operator::persistence::load(path).unwrap_or_default();
+    let mut state = get_state();
     
-    // Diagnostic Force-Feed: If save.json is not found or empty, return a PoC slime
-    // to verify the Flutter UI and Bridge are alive.
-    if state.slimes.is_empty() {
-        return vec![SlimeView {
-            id: "DIAGNOSTIC-001".to_string(),
-            name: "EMBER SPARK (PoC)".to_string(),
-            culture: "Ember".to_string(),
-            level: 3,
-            stage: "Hatchling".to_string(),
-            hp: 85,
-            max_hp: 100,
-            xp_progress: 0.45,
-            staged: true,
-        }];
+    // Internal Engine Tick: Refresh deployments and recovery
+    state.refresh_missions_if_needed(chrono::Utc::now());
+    for op in state.slimes.iter_mut() {
+        let _ = op.tick_recovery();
     }
 
-    state.slimes.iter().map(|op| {
+    state.slimes.iter().map(|s| {
+        let (st, ag, it, _, _, _) = s.total_stats();
+        // Note: is_staged will be handled by the Flutter UI state for maximum reactivity,
+        // but we expose the field for compatibility.
         SlimeView {
-            id: op.id().to_string(),
-            name: op.name().to_string(),
-            culture: op.genome.dominant_culture().to_string(),
-            level: op.level,
-            stage: op.life_stage().to_string(),
-            hp: op.genome.base_hp as u32,
-            max_hp: op.genome.base_hp as u32,
-            xp_progress: (op.total_xp % 100) as f32 / 100.0,
-            staged: false,
+            id: s.genome.id.to_string(),
+            name: s.name().to_string(),
+            culture: format!("{:?}", s.genome.dominant_culture()),
+            level: s.level,
+            cur_xp: s.total_xp,
+            max_xp: s.xp_to_next(),
+            str: st,
+            agi: ag,
+            int: it,
+            hp: s.genome.base_hp,
+            life_stage: s.life_stage().to_string().to_uppercase(),
+            is_staged: false, 
+            state_label: match &s.state {
+                crate::models::SlimeState::Deployed(_) => Some("DEPLD".to_string()),
+                crate::models::SlimeState::Injured(rem) => Some(format!("INJRD: {}s", rem.num_seconds())),
+                _ => None,
+            },
+            hat_name: s.equipped_hat.map(|h| format!("HAT: {}", h)),
         }
     }).collect()
 }
 
+#[flutter_rust_bridge::frb(sync)]
+pub fn get_game_state() -> GameStateView {
+    let state = get_state();
+    GameStateView {
+        bank: state.bank,
+        scrap: state.inventory.scrap,
+        stress_level: state.world_map.startled_level,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Asynchronous Command Interface
+// ---------------------------------------------------------------------------
+
+pub fn apply_ui_command(cmd: UiCommand) {
+    let mut state = get_state();
+
+    match cmd {
+        UiCommand::EquipHat { slime_id, hat_id } => {
+            if let Ok(uid) = uuid::Uuid::parse_str(&slime_id) {
+                if let Ok(hid) = uuid::Uuid::parse_str(&hat_id) {
+                    if let Some(op) = state.slimes.iter_mut().find(|s| s.genome.id == uid) {
+                        op.equipped_hat = Some(hid);
+                    }
+                }
+            }
+        }
+        UiCommand::SyncState => {
+            // Force save and refresh
+        }
+        _ => {
+            // Remaining commands (LaunchMission, Rename) implemented in Phase 5.2
+        }
+    }
+
+    persist_state(&state);
+}
+
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {
-    // Default utilities - feel free to customize
     flutter_rust_bridge::setup_default_user_utils();
 }
