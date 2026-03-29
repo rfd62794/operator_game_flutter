@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:operator_game_flutter/src/providers/diagnostic_provider.dart';
 import 'package:operator_game_flutter/src/providers/game_state_provider.dart';
 import 'package:operator_game_flutter/src/providers/nav_provider.dart';
-import 'package:operator_game_flutter/src/providers/roster_provider.dart';
 import 'package:operator_game_flutter/src/rust/api/simple.dart';
 import 'package:operator_game_flutter/src/rust/frb_generated.dart';
 import 'package:operator_game_flutter/src/theme/app_theme.dart';
 import 'package:operator_game_flutter/src/widgets/slime_card.dart';
 
-void main() {
-  runApp(
-    const ProviderScope(
-      child: OperatorApp(),
-    ),
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await RustLib.init();
+  runApp(const ProviderScope(child: OperatorApp()));
 }
 
 class OperatorApp extends StatelessWidget {
@@ -23,57 +20,59 @@ class OperatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OPERATOR: War Room',
-      debugShowCheckedModeBanner: false,
+      title: 'OperatorGame',
       theme: AppTheme.darkTheme,
-      home: const WarRoomLayout(),
+      home: const WarRoomDashboard(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class WarRoomLayout extends ConsumerWidget {
-  const WarRoomLayout({super.key});
+class WarRoomDashboard extends ConsumerWidget {
+  const WarRoomDashboard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeTab = ref.watch(activeMainTabProvider);
+
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              const _TopStatusBar(),
-              Expanded(
-                child: Row(
-                  children: [
-                    const _Sidebar(),
-                    const VerticalDivider(width: 1, color: AppTheme.surfaceHigh),
-                    Expanded(child: _MainContent()),
-                  ],
+          // 40dp Top Status Bar
+          const _TopStatusBar(),
+          
+          Expanded(
+            child: Row(
+              children: [
+                // 120dp Sub-tab Sidebar
+                const _Sidebar(),
+                
+                // Main Content Area
+                Expanded(
+                  child: _buildMainContent(activeTab),
                 ),
-              ),
-              const _BottomNavBar(),
-            ],
+              ],
+            ),
           ),
-          const Positioned(
-            bottom: 60, // Above bottom bar
-            left: 0,
-            right: 0,
-            child: _DiagnosticOverlay(),
-          ),
-          const _AAROverlay(),
+          
+          // 56dp Bottom Navigation
+          const _BottomNavBar(),
         ],
       ),
     );
   }
-}
 
-class _AAROverlay extends ConsumerWidget {
-  const _AAROverlay();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Placeholder for Phase 5.6 AAR integration
-    return const SizedBox.shrink();
+  Widget _buildMainContent(MainTab tab) {
+    switch (tab) {
+      case MainTab.roster:
+        return const _RosterView();
+      case MainTab.ops:
+        return const Center(child: Text('OPS CENTER - UNAVAILABLE', style: TextStyle(color: Colors.white24)));
+      case MainTab.map:
+        return const Center(child: Text('STRATEGIC MAP - UNAVAILABLE', style: TextStyle(color: Colors.white24)));
+      case MainTab.logs:
+        return const Center(child: Text('MISSION LOGS - UNAVAILABLE', style: TextStyle(color: Colors.white24)));
+    }
   }
 }
 
@@ -82,37 +81,39 @@ class _TopStatusBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameStateAsync = ref.watch(gameStateProvider);
-    // Trigger periodic refresh
-    ref.listen(gameStateTimerProvider, (_, __) => ref.invalidate(gameStateProvider));
+    final gameState = ref.watch(gameStateProvider);
 
     return Container(
       height: 40,
-      color: AppTheme.surfaceLow,
+      color: Colors.black,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: gameStateAsync.when(
-        data: (state) => Row(
-          children: [
-            const Text('OPERATOR', style: TextStyle(fontWeight: FontWeight.bold)),
-            const VerticalDivider(indent: 10, endIndent: 10, color: Colors.white24),
-            Text('Bank: \$${state.bank}'),
-            const VerticalDivider(indent: 10, endIndent: 10, color: Colors.white24),
-            Text('Scrap: ${state.scrap}'),
-            const Spacer(),
-            if (state.stressLevel > 0.01)
-              SizedBox(
-                width: 100,
-                child: LinearProgressIndicator(
-                  value: (state.stressLevel / 10.0).clamp(0.0, 1.0),
-                  backgroundColor: Colors.white10,
-                  valueColor: const AlwaysStoppedAnimation(AppTheme.stressAlert),
-                ),
-              ),
-          ],
-        ),
-        loading: () => const Center(child: LinearProgressIndicator()),
-        error: (_, __) => const Text('SYNC ERROR', style: TextStyle(color: AppTheme.stressAlert)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _TelemetryItem(label: 'BANK', value: '\$${gameState.value?.bank ?? 0}', color: Colors.greenAccent),
+          _TelemetryItem(label: 'SCRAP', value: '${gameState.value?.scrap ?? 0}kg', color: Colors.orangeAccent),
+          _TelemetryItem(label: 'STRESS', value: '${(gameState.value?.stress_level ?? 0 * 100).toInt()}%', color: Colors.redAccent),
+        ],
       ),
+    );
+  }
+}
+
+class _TelemetryItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _TelemetryItem({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(width: 8),
+        Text(value, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'monospace')),
+      ],
     );
   }
 }
@@ -122,24 +123,37 @@ class _Sidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mainTab = ref.watch(activeMainTabProvider);
+    final activeTab = ref.watch(activeMainTabProvider);
     
     return Container(
       width: 120,
-      color: AppTheme.surfaceLow,
+      color: const Color(0xFF131318),
       child: Column(
         children: [
           const SizedBox(height: 16),
-          if (mainTab == MainTab.roster) ...[
-            _SubTabItem(label: '🧬 COLLECTION', activated: ref.watch(rosterSubTabProvider) == RosterSubTab.collection, onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.collection),
-            _SubTabItem(label: '🧪 BREEDING', activated: ref.watch(rosterSubTabProvider) == RosterSubTab.breeding, onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.breeding),
-            _SubTabItem(label: '🎖️ RECRUIT', activated: ref.watch(rosterSubTabProvider) == RosterSubTab.recruit, onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.recruit),
-            _SubTabItem(label: '🛡️ SQUAD', activated: ref.watch(rosterSubTabProvider) == RosterSubTab.squad, onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.squad),
-          ] else if (mainTab == MainTab.ops) ...[
-            _SubTabItem(label: '🚀 ACTIVE', activated: ref.watch(opsSubTabProvider) == OpsSubTab.active, onTap: () => ref.read(opsSubTabProvider.notifier).state = OpsSubTab.active),
-            _SubTabItem(label: '📝 QUESTS', activated: ref.watch(opsSubTabProvider) == OpsSubTab.quests, onTap: () => ref.read(opsSubTabProvider.notifier).state = OpsSubTab.quests),
-          ] else ...[
-             const Center(child: Text('Coming Soon', style: TextStyle(color: Colors.white24, fontSize: 10))),
+          if (activeTab == MainTab.roster) ...[
+            _SidebarItem(
+              icon: Icons.groups, 
+              label: 'ACTIVE', 
+              isActive: ref.watch(rosterSubTabProvider) == RosterSubTab.active,
+              onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.active,
+            ),
+            _SidebarItem(
+              icon: Icons.strikethrough_s, 
+              label: 'STAGED', 
+              isActive: ref.watch(rosterSubTabProvider) == RosterSubTab.staged,
+              onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.staged,
+            ),
+            _SidebarItem(
+              icon: Icons.inventory_2, 
+              label: 'RESERVES', 
+              isActive: ref.watch(rosterSubTabProvider) == RosterSubTab.reserves,
+              onTap: () => ref.read(rosterSubTabProvider.notifier).state = RosterSubTab.reserves,
+            ),
+          ],
+          if (activeTab == MainTab.ops) ...[
+             _SidebarItem(icon: Icons.assignment, label: 'QUESTS', isActive: false, onTap: () {}),
+             _SidebarItem(icon: Icons.history, label: 'AAR', isActive: false, onTap: () {}),
           ],
         ],
       ),
@@ -147,111 +161,57 @@ class _Sidebar extends ConsumerWidget {
   }
 }
 
-class _SubTabItem extends StatelessWidget {
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
   final String label;
-  final bool activated;
+  final bool isActive;
   final VoidCallback onTap;
 
-  const _SubTabItem({required this.label, required this.activated, required this.onTap});
+  const _SidebarItem({required this.icon, required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final color = isActive ? AppTheme.primaryAccent : Colors.white24;
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        width: double.infinity,
-        color: activated ? AppTheme.surfaceHigh : Colors.transparent,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: activated ? FontWeight.bold : FontWeight.normal,
-            color: activated ? AppTheme.primaryAccent : Colors.white60,
-          ),
+        height: 64,
+        width: 120,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
+          ],
         ),
       ),
     );
   }
 }
 
-class _MainContent extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mainTab = ref.watch(activeMainTabProvider);
-    final rosterSubTab = ref.watch(rosterSubTabProvider);
-    final opsSubTab = ref.watch(opsSubTabProvider);
-    final mapSubTab = ref.watch(mapSubTabProvider);
-    final logsSubTab = ref.watch(logsSubTabProvider);
-
-    switch (mainTab) {
-      case MainTab.roster:
-        switch (rosterSubTab) {
-          case RosterSubTab.collection: return const RosterView();
-          default: return _PlaceholderView(label: 'ROSTER / ${rosterSubTab.name.toUpperCase()}');
-        }
-      case MainTab.ops:
-        switch (opsSubTab) {
-          case OpsSubTab.quests: return const QuestBoardView();
-          case OpsSubTab.active: return const ActiveOpsView();
-        }
-      case MainTab.map:
-        switch (mapSubTab) {
-          case MapSubTab.zones: return const RadarView();
-          case MapSubTab.shop: return const ShopView();
-        }
-      case MainTab.logs:
-        switch (logsSubTab) {
-          case LogsSubTab.missions: return const CombatLogView();
-          default: return _PlaceholderView(label: 'LOGS / ${logsSubTab.name.toUpperCase()}');
-        }
-    }
-  }
-}
-
-class _PlaceholderView extends StatelessWidget {
-  final String label;
-  const _PlaceholderView({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.construction, color: Colors.white10, size: 48),
-          const SizedBox(height: 16),
-          Text(label, style: const TextStyle(color: Colors.white24, letterSpacing: 1.5)),
-          const Text('PHASE 5.5 INTEGRATION PENDING', style: TextStyle(color: Colors.white10, fontSize: 8)),
-        ],
-      ),
-    );
-  }
-}
-
-class RosterView extends ConsumerWidget {
-  const RosterView({super.key});
+class _RosterView extends ConsumerWidget {
+  const _RosterView();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rosterAsync = ref.watch(rosterProvider);
 
     return rosterAsync.when(
-      data: (roster) {
-        if (roster.isEmpty) return const _EmptyRosterView();
-        return RefreshIndicator(
-          onRefresh: () => ref.read(rosterProvider.notifier).refresh(),
-          child: ListView.separated(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            itemCount: roster.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) => SlimeCard(slime: roster[index]),
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => _ErrorView(error: err.toString()),
+      data: (roster) => GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.4,
+        ),
+        itemCount: roster.length,
+        itemBuilder: (context, index) => SlimeCard(slime: roster[index]),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      error: (err, _) => Center(child: Text('LOAD ERROR: $err', style: const TextStyle(color: Colors.red))),
     );
   }
 }
@@ -265,7 +225,7 @@ class _BottomNavBar extends ConsumerWidget {
 
     return Container(
       height: 56,
-      color: AppTheme.surfaceLow,
+      color: Colors.black,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -275,147 +235,51 @@ class _BottomNavBar extends ConsumerWidget {
             isActive: activeTab == MainTab.roster,
             onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.roster,
           ),
-          _TabItem(icon: Icons.rocket_launch, label: 'Ops', active: activeTab == MainTab.ops, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.ops),
-          _TabItem(icon: Icons.public, label: 'Map', active: activeTab == MainTab.map, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.map),
-          _TabItem(icon: Icons.history_edu, label: 'Logs', active: activeTab == MainTab.logs, onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.logs),
+          _BottomTabItem(
+            icon: Icons.rocket_launch, 
+            label: 'OPS', 
+            isActive: activeTab == MainTab.ops,
+            onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.ops,
+          ),
+          _BottomTabItem(
+            icon: Icons.public, 
+            label: 'MAP', 
+            isActive: activeTab == MainTab.map,
+            onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.map,
+          ),
+          _BottomTabItem(
+            icon: Icons.history_edu, 
+            label: 'LOGS', 
+            isActive: activeTab == MainTab.logs,
+            onTap: () => ref.read(activeMainTabProvider.notifier).state = MainTab.logs,
+          ),
         ],
       ),
     );
   }
 }
 
-class _TabItem extends StatelessWidget {
+class _BottomTabItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final bool active;
+  final bool isActive;
   final VoidCallback onTap;
 
-  const _TabItem({required this.icon, required this.label, required this.active, required this.onTap});
+  const _BottomTabItem({required this.icon, required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final color = isActive ? AppTheme.primaryAccent : Colors.white38;
     return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: active ? AppTheme.primaryAccent : Colors.white38, size: 24),
-          const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: active ? AppTheme.primaryAccent : Colors.white38, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-}
-
-class _DiagnosticOverlay extends ConsumerWidget {
-  const _DiagnosticOverlay();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final latencyMicros = ref.watch(bridgeLatencyProvider);
-    final latencyMs = latencyMicros / 1000.0;
-    final color = latencyMs < 2.0 ? Colors.greenAccent : (latencyMs < 5.0 ? Colors.orangeAccent : Colors.redAccent);
-
-    return Container(
-      color: Colors.black.withOpacity(0.8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.speed, size: 12, color: Colors.white38),
-          const SizedBox(width: 8),
-          Text('BRIDGE ROUND TRIP: ${latencyMs.toStringAsFixed(2)}ms', style: const TextStyle(fontSize: 9, fontFamily: 'monospace', color: Colors.white70)),
-          const SizedBox(width: 16),
-          Text(latencyMs < 8.33 ? '120FPS: OK' : '120FPS: FAIL', style: TextStyle(color: latencyMs < 8.33 ? AppTheme.primaryAccent : AppTheme.stressAlert, fontSize: 9, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyRosterView extends StatelessWidget {
-  const _EmptyRosterView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inventory_2_outlined, size: 48, color: Colors.white10),
-          SizedBox(height: 16),
-          Text('BIO-MANIFEST EMPTY', style: TextStyle(color: Colors.white24, letterSpacing: 1)),
-        ],
-      ),
-    );
-  }
-}
-
-class QuestBoardView extends StatelessWidget {
-  const QuestBoardView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderView(label: 'QUEST BOARD (SDD-038)');
-  }
-}
-
-class ActiveOpsView extends StatelessWidget {
-  const ActiveOpsView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderView(label: 'ACTIVE OPERATIONS (SDD-038)');
-  }
-}
-
-class RadarView extends StatelessWidget {
-  const RadarView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderView(label: 'RADAR ZONES');
-  }
-}
-
-class ShopView extends StatelessWidget {
-  const ShopView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderView(label: 'QUARTERMASTER');
-  }
-}
-
-class CombatLogView extends StatelessWidget {
-  const CombatLogView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderView(label: 'MISSION HISTORY');
-  }
-}
-
-class _ErrorView extends ConsumerWidget {
-  final String error;
-  const _ErrorView({required this.error});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      child: SizedBox(
+        width: 80,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.sync_problem, color: AppTheme.stressAlert, size: 48),
-            const SizedBox(height: 16),
-            Text('SYNC ERROR\n$error', style: const TextStyle(color: AppTheme.stressAlert), textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => ref.read(rosterProvider.notifier).refresh(),
-              child: const Text('RETRY SYNC'),
-            ),
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 2),
+            Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
