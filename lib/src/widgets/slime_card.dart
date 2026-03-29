@@ -1,278 +1,202 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:operator_game_flutter/src/rust/api/simple.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:operator_game_flutter/src/rust/api/simple.rs.dart';
+import 'package:operator_game_flutter/src/rust/frb_generated.dart';
 import 'package:operator_game_flutter/src/theme/app_theme.dart';
-import 'package:operator_game_flutter/src/widgets/slime_detail_view.dart';
 
-class SlimeCard extends StatelessWidget {
+class SlimeCard extends ConsumerWidget {
   final SlimeView slime;
-  final VoidCallback? onStageToggle;
 
-  const SlimeCard({
-    super.key,
-    required this.slime,
-    this.onStageToggle,
-  });
+  const SlimeCard({super.key, required this.slime});
 
   @override
-  Widget build(BuildContext context) {
-    final cultureColor = SlimeColors.getCultureColor(slime.culture);
-    final hpPercent = slime.hp / slime.maxHp;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: 380,
-          padding: const EdgeInsets.all(16),
-          decoration: GlassDecoration(
-            color: cultureColor,
-            opacity: 0.1,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Row 1: Name + Culture Badge + Stage Icon
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      slime.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  _CultureBadge(culture: slime.culture, color: cultureColor),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      SlimeDetailView.show(context, slime);
-                    },
-                    icon: const Icon(Icons.open_in_new, size: 20),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Row 2: HP Bar (Premium)
-              Stack(
-                children: [
-                   _VitalityBar(percent: hpPercent, color: cultureColor),
-                   if (hpPercent < 0.2)
-                     const Positioned.fill(child: _HeartbeatOverlay()),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Row 3: Level + Life Stage Badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'LVL ${slime.level}',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white70,
-                        ),
-                  ),
-                  _StageBadge(stage: slime.stage),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // Row 4: XP Progress (Sultle hairline)
-              LinearProgressIndicator(
-                value: slime.xpProgress,
-                minHeight: 2,
-                backgroundColor: Colors.white10,
-                valueColor: AlwaysStoppedAnimation<Color>(cultureColor.withOpacity(0.5)),
-              ),
-              const SizedBox(height: 12),
-
-              // Row 5: Action Footer
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        slime.staged ? Icons.check_circle : Icons.radio_button_unchecked,
-                        size: 16,
-                        color: slime.staged ? Colors.greenAccent : Colors.white38,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        slime.staged ? 'STAGED' : 'UNSTAGED',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: slime.staged ? Colors.greenAccent : Colors.white38,
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ],
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      HapticFeedback.mediumImpact();
-                      onStageToggle?.call();
-                    },
-                    icon: Icon(slime.staged ? Icons.remove : Icons.add, size: 18),
-                    label: Text(slime.staged ? 'WITHDRAW' : 'STAGE'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: slime.staged ? Colors.redAccent : Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CultureBadge extends StatelessWidget {
-  final String culture;
-  final Color color;
-
-  const _CultureBadge({required this.culture, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Ground-truth culture colors
+    final cultureColor = SlimeColors.fromCulture(slime.culture);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        culture.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.0,
-        ),
-      ),
-    );
-  }
-}
-
-class _StageBadge extends StatelessWidget {
-  final String stage;
-
-  const _StageBadge({required this.stage});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white12,
+        color: const Color(0xFF1A1A22),
         borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        stage,
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
+        border: Border.all(
+          color: slime.is_staged ? Colors.greenAccent.withOpacity(0.5) : Colors.white10,
+          width: 1,
         ),
       ),
-    );
-  }
-}
-
-class _VitalityBar extends StatelessWidget {
-  final double percent;
-  final Color color;
-
-  const _VitalityBar({required this.percent, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine vitality color (green to red transition)
-    final barColor = Color.lerp(Colors.redAccent, Colors.greenAccent, percent) ?? color;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: percent,
-            minHeight: 8,
-            backgroundColor: Colors.white10,
-            valueColor: AlwaysStoppedAnimation<Color>(barColor),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('VITALITY', style: TextStyle(fontSize: 9, color: Colors.white38, fontWeight: FontWeight.bold)),
-            Text('${(percent * 100).toInt()}%', style: TextStyle(fontSize: 9, color: barColor.withOpacity(0.8), fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _HeartbeatOverlay extends StatefulWidget {
-  const _HeartbeatOverlay();
-
-  @override
-  State<_HeartbeatOverlay> createState() => _HeartbeatOverlayState();
-}
-
-class _HeartbeatOverlayState extends State<_HeartbeatOverlay> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.0, end: 0.4).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.redAccent.withOpacity(_animation.value),
-                blurRadius: 8,
-                spreadRadius: 1,
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ROW 1: Name, Culture, Stage Toggle
+          Row(
+            children: [
+              Text(
+                slime.name,
+                style: TextStyle(color: cultureColor, fontWeight: FontWeight.bold, fontSize: 14),
               ),
+              const SizedBox(width: 8),
+              Text(
+                slime.culture.toUpperCase(),
+                style: TextStyle(color: cultureColor.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              if (slime.state_label != null)
+                _StatusBadge(label: slime.state_label!)
+              else
+                _StageButton(
+                  isStaged: slime.is_staged,
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    // Future: ref.read(uiCommandProvider).apply(UiCommand.toggleStage(id: slime.id))
+                  },
+                ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 4),
+
+          // ROW 2: Level, LifeStage, Pattern
+          Row(
+            children: [
+              Text('Lv: ${slime.level}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              const SizedBox(width: 8),
+              _LifeStageBadge(stage: slime.life_stage),
+              const SizedBox(width: 8),
+              const Text('PATTERN_ALPHA', style: TextStyle(color: Colors.white24, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // ROW 3: XP ProgressBar (4dp height)
+          _XPProgressBar(current: slime.cur_xp, max: slime.max_xp),
+          const SizedBox(height: 6),
+
+          // ROW 4: Stats (STR/AGI/INT) and HP
+          Row(
+            children: [
+              Text(
+                'STR:${slime.str} AGI:${slime.agi} INT:${slime.int} HP:${slime.hp.toStringAsFixed(0)}',
+                style: const TextStyle(color: Colors.white54, fontSize: 11, fontFamily: 'monospace'),
+              ),
+              const Spacer(),
+              const Icon(Icons.chevron_right, size: 14, color: Colors.white10),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // ROW 5: EQUIP HAT
+          SizedBox(
+            width: double.infinity,
+            height: 28,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.white10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+                padding: EdgeInsets.zero,
+              ),
+              child: Text(
+                slime.hat_name ?? '+ EQUIP HAT',
+                style: const TextStyle(fontSize: 11, color: Colors.white38),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+  const _StatusBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withOpacity(0.1),
+        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class _StageButton extends StatelessWidget {
+  final bool isStaged;
+  final VoidCallback onPressed;
+  const _StageButton({required this.isStaged, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 24,
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          backgroundColor: isStaged ? Colors.greenAccent.withOpacity(0.1) : Colors.white.withOpacity(0.05),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+        ),
+        child: Text(
+          isStaged ? 'STAGED' : 'STAGE',
+          style: TextStyle(
+            color: isStaged ? Colors.greenAccent : Colors.white70,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LifeStageBadge extends StatelessWidget {
+  final String stage;
+  const _LifeStageBadge({required this.stage});
+
+  @override
+  Widget build(BuildContext context) {
+    // Colors matched to egui manifest.rs §300+
+    Color color = Colors.white54;
+    switch (stage.toUpperCase()) {
+      case 'HATCHLING': color = const Color(0xFFA0A0A0); break;
+      case 'JUVENILE': color = const Color(0xFF8CC88C); break;
+      case 'YOUNG': color = const Color(0xFF64C8B4); break;
+      case 'PRIME': color = const Color(0xFFDCB450); break;
+      case 'VETERAN': color = const Color(0xFFC88C3C); break;
+      case 'ELDER': color = const Color(0xFFB478DC); break;
+    }
+
+    return Text(
+      stage,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+class _XPProgressBar extends StatelessWidget {
+  final int current;
+  final int max;
+  const _XPProgressBar({required this.current, required this.max});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (current / max).clamp(0.0, 1.0);
+    return SizedBox(
+      height: 4,
+      width: double.infinity,
+      child: LinearProgressIndicator(
+        value: pct,
+        backgroundColor: Colors.white.withOpacity(0.05),
+        valueColor: const AlwaysStoppedAnimation(Colors.white24),
+      ),
     );
   }
 }

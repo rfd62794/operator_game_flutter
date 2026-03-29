@@ -1,23 +1,42 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
+  static const Color surfaceLow = Color(0xFF131318);
+  static const Color surfaceHigh = Color(0xFF25252C);
+  static const Color primaryAccent = Color(0xFF69FEA5);
+  static const Color standardText = Color(0xFFF8F5FD);
+  static const Color stressAlert = Color(0xFFC83232);
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.deepPurple,
-        brightness: Brightness.dark,
-        surface: const Color(0xFF121212),
+      scaffoldBackgroundColor: surfaceLow,
+      colorScheme: ColorScheme.dark(
+        surface: surfaceLow,
+        onSurface: standardText,
+        primary: primaryAccent,
+        secondary: primaryAccent.withOpacity(0.7),
+        error: stressAlert,
       ),
-      scaffoldBackgroundColor: const Color(0xFF0A0A0A),
-      cardTheme: CardThemeData(
-        color: Colors.white.withOpacity(0.05),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: surfaceLow,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: standardText,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 2,
         ),
+      ),
+      cardTheme: CardThemeData(
+        color: surfaceHigh,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      ),
+      textTheme: const TextTheme(
+        labelSmall: TextStyle(letterSpacing: 1.0, fontSize: 10),
       ),
     );
   }
