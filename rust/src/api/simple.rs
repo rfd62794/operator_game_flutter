@@ -82,16 +82,16 @@ pub fn get_roster() -> Vec<SlimeView> {
             max_xp: s.xp_to_next(),
             str: st,
             agi: ag,
-            int: it,
+            intel: it,
             hp: s.genome.base_hp,
             life_stage: s.life_stage().to_string().to_uppercase(),
             is_staged: false, 
             state_label: match &s.state {
                 crate::models::SlimeState::Deployed(_) => Some("DEPLD".to_string()),
-                crate::models::SlimeState::Injured(rem) => Some(format!("INJRD: {}s", rem.num_seconds())),
+                crate::models::SlimeState::Injured(rem) => Some(format!("INJRD: {}s", (*rem - Utc::now()).num_seconds())),
                 _ => None,
             },
-            hat_name: s.equipped_hat.map(|h| format!("HAT: {}", h)),
+            hat_name: s.equipped_hat.map(|h| format!("HAT: {}", operator::models::Hat::from_id(&h).name)),
         }
     }).collect()
 }
